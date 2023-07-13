@@ -5,7 +5,7 @@
   tasks:
     - name: deploy application container
       docker_container:
-        image: apatil/devops-integration:latest
+        image: bhaleraoshivaji/devops-integration:latest
         name: myapplication
         state: started
         auto_remove: true
