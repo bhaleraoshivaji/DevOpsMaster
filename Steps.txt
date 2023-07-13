@@ -1,0 +1,167 @@
+
+============================================================ FIRST DAY ===========================================================================
+
+#### Assignment 1: Assignment for installation GIT & GIT HUB Clone, Fetch/Pull & push the code.
+
+1. git remote add Shivaji https://github.com/bhaleraoshivaji/DevOpsMaster.git
+2. git remote add origin https://github.com/ampatil/devops-automation.git
+
+
+
+#### Assignment 2: Assignment for installation Jenkins & configuration.
+
+1. #!/bin/bash
+sudo apt update -y
+
+2. sudo apt install default-jdk -y
+
+3. sudo java -version
+4. sudo mkdir -p /usr/share/keyrings
+
+5. sudo curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee   /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+6. sudo echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]   https://pkg.jenkins.io/debian-stable binary/ | sudo tee   /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+7. sudo apt update -y
+8. sudo apt install jenkins -y 
+9. systemctl status jenkins --no-pager -l
+10. sudo systemctl enable --now jenkins
+11. sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+12. configured this maven 3.8.5 version to buil the java application.
+
+
+#### Assignment 3: Assignment for DOCKER Installation & container creation & running the application.
+1. Clone the Repo to your server/machin ==> git clone https://github.com/bhaleraoshivaji/DevOpsMaster.git
+2. install maven to your Repo folder ==> sudo apt install maven
+3. Create .jar or packge file ==> mvn package
+4. To install docker ==> sudo apt install docker.io
+5. To create dcoker hub account 
+6. To build the .jar or package file ==> sudo docker build -t <accname>/<imagename> . (currect directory) (sudo docker build -t bhaleraoshivaji/devopsmaster .)
+7. To see the docker images ==> sudo docker image ls
+8. To run the application using docker ==> sudo docker run --name <myname> -p8088:8086 (port mapping container port:our system/internal port) <docker_image_name> (sudo docker run --name myapp -p8088:8086 bhaleraoshivaji/devopsmaster)
+9. To push the image to Docker Hub repository you have to login first ==> sudo docker login (Asked username & password).
+10. To push the image to Docker Hub repository ==>sudo docker docker_image_name (sudo docker push bhaleraoshivaji/devopsmaster)
+
+
+#### Assignment 4: Assignment for Ansible Installation.
+1. Install Ansible on your machine ==> sudo apt install ansible.
+2. We can connect multiple server or system using ssh keypair.
+3. To connect from one machine to another machine ==> ssh -i mykey ubuntu@172.31.2.181 (mykey is file wich having private keypair from .pem file when we create VM).
+4. We can directly install/create/add files on remote machine from your machine for that we are using ad-hoc command or playbook.yml files.
+5. To communicate using roles or groups we can use inventory.yml files like below.
+	Example:
+			[myserver] ==> Used like variable.
+			172.31.2.181 ==> Remote machine to which you can connect.
+6. To do some change on remote machine, we can use playbook.yml files like below. It is starting from --- (3 hypens).
+	Example:
+			---
+			- hosts: myserver  ==> This is variable which are there in inventory.yml
+			  become: true
+			  tasks:
+				- name: ensure nginx is at the latest version
+				  apt: name=nginx state=latest
+				- name: start nginx
+				  service:
+					  name: nginx
+					  state: started
+					  
+7. To run the Playbook files with inventories files using keypair ==> ansible-playbook -i myinventory.yml --private-key mykey mybook.yml
+
+
+
+
+============================================================ SECOND DAY ===========================================================================
+
+#### Assignment 5:  Implement CI/CD pipeline to deploy application on remote server using docker image.
+1. Install Jenkins on your server/machine ==> follow assignment 2 to install jenkins.
+2. Install MAVEN through Jenkins => 
+									1. Go to Manage Jenkins=>Go to plugins=>Available plugins=>check for Maven integration plugins.
+									2. Go to Manage Jenkins=>Go to Tools=>We will get the MAVEN installation=>add proper version=>save it.
+3. Install ansible on Jenkins server/machine ==> sudo apt install ansible
+4. Create build pipeline through Jenkins =>
+									1. Got to New Item=>Select Pipeline Project=>Press Ok.
+									2. In created pipeline we have add configuration=>Advance options=>pipeline script.
+									3. If you want to add script scheleton, use jenkins pipeline syntax.
+5. We have to prepare the Jenkins pipeline script. We have to create .Jar file or package using below steps=>
+									1. We have to get/checkout code from repository, use pipeline syntax to create command.
+												   => checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/bhaleraoshivaji/DevOpsMaster.git']])
+									2. Package or create .jar file using 
+													=>  sh "mvn -Dmaven.test.failure.ignore=true clean package" (// Run Maven on a Unix agent.)
+													
+									stages{
+										stage('Build Maven'){
+											steps{
+												checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/ampatil/devops-automation']]])
+												sh 'mvn clean package'
+											}
+										}
+6. Install Docker on jenkins server/machine ==> sudo apt install docker.io
+7. We have provide Jenkins user permission to use a docker for that we have add Jenkins user into docker group for that use below command.
+								 =>
+									1. sudo usermod -aG docker jenkins
+									2. sudo usermod -aG root jenkins
+									3. sudo chmod 777 /var/run/docker.sock
+8. We have create docker image so create another stage in pipeline script to create docker image=> (Note: if below script given any permission error, run step.7)
+									stage('Build docker image'){
+										steps{
+											script{
+												sh 'docker build -t bhaleraoshivaji/devops-integration .'
+											}
+										}
+									}
+9. We have push this image to our docker hub, use below steps =>
+									1. We have to create pipeline syntax for with credentials steps to login with your docker hub & then you cann push your image.
+									
+								    stage('Push Image to Docker Hub'){
+											steps{
+												script{
+													withCredentials([string(credentialsId: 'dockerhubnewkey', variable: 'dockerhubkey')]) {
+														sh 'docker login -u bhaleraoshivaji -p ${dockerhubkey}'
+												}
+												   sh 'docker push bhaleraoshivaji/devops-integration'
+											}
+										}
+									}
+10. Now, we have to deploy our image to another remote machine, use below steps =>
+									1. We have to install docker on remote machine becuase we have to container on it ==> sudo apt install docker.io
+									2. We have to install ansible plugings into Jenkins.
+									3. We have to create ansible syntax from pipeline syntax. 
+									4. We have to provide playbook.yml & inventory file path from github repository into pipeline syntax screen.
+									5. We to setup SSH connection credentials using username & private key. (note username should ubuntu).
+									6. We have add another stage/step to connect with another Remote server/machine, you have to logged into it.
+										 stage('Deploy Image to Remote Server'){
+											steps{
+											   ansiblePlaybook credentialsId: 'sshprivatekey', installation: 'ansible', disableHostKeyChecking: true, inventory: 'inventory', playbook: 'playbook.yml'
+											}
+										}
+										(Note : We have to add disableHostKeyChecking: true explicitly to avoid key checking confirmation)
+									7. Before you build, we have to create container on remote machine, to work this build we have install python3-docker module on remote machine ==> 	
+											sudo apt install python3-docker
+																	
+									8. Now we can deployed to image to Remote machine & can access the application.
+										 stage('Deploy Image to Remote Server'){
+											steps{
+											   ansiblePlaybook credentialsId: 'sshprivatekey', installation: 'ansible', disableHostKeyChecking: true, inventory: 'inventory', playbook: 'playbook.yml'
+											}
+										}
+									
+11. We can directly attached the "Jenkinsfile" in jenkins configuration to without re-writing the code again.						 
+
+
+#### Assignment 6:  Implement GitHub Webhooks with Jenkins. 
+
+1. We can build pipeline automatic base using Webhooks settings => (Note: Use this link for more details https://www.blazemeter.com/blog/how-to-integrate-your-github-repository-to-your-jenkins-project)
+									1. Go to GitHub settings=>Webhooks.
+									2. Add Webhook
+									3. Add our Jenkins URL into Payload URL ending with /Git-Webhook/ => http://54.186.101.188:8080/github-webhook/
+									4. Add the event which events would you like to trigger this webhook.
+									5. Go to Jenkins.
+									6. Got configuration & build triggers, we have to check "GitHub hook trigger for GITScm polling" option.
+								
+
+									
+
+
+									
+
+
