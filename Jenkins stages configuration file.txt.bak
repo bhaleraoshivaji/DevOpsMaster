@@ -124,11 +124,5 @@ pipeline {
                 }
             }
         }
-		
-		stage('Deploy Image to Remote Server'){
-            steps{
-               ansiblePlaybook credentialsId: 'sshprivatekey', installation: 'ansible', disableHostKeyChecking: true, inventory: 'inventory', playbook: 'playbook.yml'
-            }
-        }
     }
 }

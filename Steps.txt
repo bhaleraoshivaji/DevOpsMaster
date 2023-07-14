@@ -36,7 +36,7 @@ sudo apt update -y
 3. Create .jar or packge file ==> mvn package
 4. To install docker ==> sudo apt install docker.io
 5. To create dcoker hub account 
-6. To build the .jar or package file ==> sudo docker build -t <accname>/<imagename> . (currect directory) (sudo docker build -t bhaleraoshivaji/devopsmaster .)
+6. To build the .jar or package file & call the Dockerfile from remote & build the image as you given the name ==> sudo docker build -t <accname>/<imagename> . (currect directory) (sudo docker build -t bhaleraoshivaji/devopsmaster .)
 7. To see the docker images ==> sudo docker image ls
 8. To run the application using docker ==> sudo docker run --name <myname> -p8088:8086 (port mapping container port:our system/internal port) <docker_image_name> (sudo docker run --name myapp -p8088:8086 bhaleraoshivaji/devopsmaster)
 9. To push the image to Docker Hub repository you have to login first ==> sudo docker login (Asked username & password).
@@ -66,7 +66,6 @@ sudo apt update -y
 					  state: started
 					  
 7. To run the Playbook files with inventories files using keypair ==> ansible-playbook -i myinventory.yml --private-key mykey mybook.yml
-
 
 
 
@@ -149,7 +148,6 @@ sudo apt update -y
 
 
 #### Assignment 6:  Implement GitHub Webhooks with Jenkins. 
-
 1. We can build pipeline automatic base using Webhooks settings => (Note: Use this link for more details https://www.blazemeter.com/blog/how-to-integrate-your-github-repository-to-your-jenkins-project)
 									1. Go to GitHub settings=>Webhooks.
 									2. Add Webhook

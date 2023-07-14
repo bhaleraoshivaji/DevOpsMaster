@@ -1,0 +1,102 @@
+To install docker on jenkins server machine
+
+sudo apt install docker.io
+
+sudo usermod -aG docker jenkins
+sudo usermod -aG root jenkins
+sudo chmod 777 /var/run/docker.sock
+
+======================
+
+
+
+To install ansible
+
+sudo apt install ansible
+
+===============================
+
+
+Jenkins Script:
+
+
+pipeline {
+    agent any
+    tools{
+        maven 'maven_3.6.3'
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/ampatil/devops-automation']]])
+                sh 'mvn clean package'
+            }
+        }
+        stage('Build docker image'){
+            steps{
+                script{
+                    sh 'docker build -t ampatil/devops-integration .'
+                }
+            }
+        }
+        stage('Push image to Hub'){
+            steps{
+                script{
+                   withCredentials([string(credentialsId: 'dockerhubkey', variable: 'dockerhub')]) {
+                   sh 'docker login -u ampatil -p ${dockerhub}'
+
+}
+                   sh 'docker push ampatil/devops-integration'
+                }
+            }
+        }
+       
+    }
+}
+
+
+
+
+=====================
+
+
+Docker host 
+
+Install docker
+
+sudo apt install docker.io
+
+
+and install python3-docker ansible module
+
+apt install python3-docker
+
+
+=========================================
+
+jenkins script to use ansible plugin and run playbook
+
+
+pipeline {
+    agent any
+
+    
+    stages {
+        stage('Build') {
+            steps {
+                // Get some code from a GitHub repository
+                git branch: 'main', url: 'https://github.com/ampatil/devops-automation.git'
+
+               ansiblePlaybook credentialsId: 'sshkey1', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory', playbook: 'playbook.yml'
+            }
+
+            
+        }
+    }
+}
+
+
+
+=======================================
+
+
